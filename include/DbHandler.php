@@ -108,7 +108,7 @@ class DbHandler
     function sendGCM($title,$body, $to) {
 
 
-        $url = 'https://fcm.googleapis.com/fcm/send';
+        $url = FIREBASE_URL;
 
         $data = array(
             'title' => $title,
@@ -120,7 +120,7 @@ class DbHandler
 
 
         $headers = array (
-                'Authorization: key=' . "AAAAdBLO-EA:APA91bF9bssa44K3kOnf1z-MalZBMToseqzv8dshdg6L5nu_DlovNhtQfYgf8C2KajYEHrYW9h-onKgLDX2rU6idwxkp7CY4GccnQlGGKG6IgPC6J1IGeg57PC0EGcnNyRTkLKkQDxZr",
+                'Authorization: key=' .FIREBASE_AUTHORIZATION_KEY,
                 'Content-Type: application/json'
         );
 
@@ -132,7 +132,6 @@ class DbHandler
         curl_setopt( $ch, CURLOPT_POSTFIELDS, $fields );
 
         $result = curl_exec( $ch );
-        // echo $result;
         curl_close( $ch );
     }
 
@@ -278,6 +277,25 @@ class DbHandler
         return $record;
     }
 
+
+    function getSellerSalesStatusOfEveryMonthBySellerId($sellerId)
+    {
+        $rec = array();
+        $record = array();
+        $query = "select date_format(created_at,'%M'),sum(sell_price) from sellers_sells WHERE seller_id=? group by date_format(created_at,'%M'),year(created_at),month(created_at) ORDER BY year(created_at),month(created_at)";
+        $stmt = $this->con->prepare($query);
+        $stmt->bind_param('s',$sellerId);
+        $stmt->execute();  
+        $stmt->bind_result($month,$sellPrice);
+        while($stmt->fetch())
+        {
+            $rec['month']= $month;
+            $rec['totalSales'] = $sellPrice;
+            array_push($record, $rec);
+        }
+        return $record;
+    }
+
     function getSellerSalesStatusOfEveryMonth()
     {
         $rec = array();
@@ -340,7 +358,7 @@ class DbHandler
     //     return $products;
     // }
     
-        function getTopTenMostSalesProduct()
+    function getTopTenMostSalesProduct()
     {
         $rec = array();
         $record = array();

@@ -18,50 +18,13 @@ $JWT = new JWT;
 
 $app = new \Slim\App;
 
-$app = new Slim\App([
+// $app = new Slim\App([
 
-    'settings' => [
-        'displayErrorDetails' => true,
-        'debug'               => true,
-    ]
-]);
-
-
-
-$app->post('/register', function(Request $request, Response $response)
-{
-    if(!checkEmptyParameter(array('name','email','password'),$request,$response))
-    {
-        $db = new DbHandler();
-        $requestParameter = $request->getParsedBody();
-        $email = $requestParameter['email'];
-        $password = $requestParameter['password'];
-        $name = $requestParameter['name'];
-        if (strlen($name)>30)
-            return returnException(true,NAME_GRETER,$response);
-        if (strlen($name)<4)
-            return returnException(true,NAME_LOWER,$response);
-        $name = trim(preg_replace('/ +/', ' ', preg_replace('/[^A-Za-z0-9 ]/', ' ', urldecode(html_entity_decode(strip_tags($name))))));
-        $result = $db->createUser($name,$email,$password);
-        if($result == USER_CREATION_FAILED)
-            return returnException(true,USER_CREATION_FAILED,$response);
-        else if($result == EMAIL_EXIST)
-            return returnException(true,EMAIL_EXIST,$response);
-        else if($result == USERNAME_EXIST)
-            return returnException(true,USERNAME_EXIST,$response);
-        else if($result == USER_CREATED){
-            $code = $db->getCode(1);
-            if(prepareVerificationMail($name,$email,$code))
-               return returnException(false,EMAIL_VERIFICATION_SENT.$email,$response);
-            else
-               return returnException(true,EMAIL_VERIFICATION_SENT_FAILED,$response);
-        }
-        else if($result == VERIFICATION_EMAIL_SENT_FAILED)
-            return returnException(true,EMAIL_VERIFICATION_SENT_FAILED,$response);
-        else if($result == EMAIL_NOT_VALID)
-            return returnException(true,EMAIL_NOT_VALID,$response);
-    }
-});
+//     'settings' => [
+//         'displayErrorDetails' => true,
+//         'debug'               => true,
+//     ]
+// ]);
 
 $app->post('/password/update',function(Request $request, Response $response)
 {
@@ -103,7 +66,7 @@ $app->get('/demo',function(Request $request, Response $response,array $args )
     $db = new DbHandler;
     $db->setUserId(819);
         $responseG = array();
-        $responseG['data'] = $db->sendGCM("Demo","Demo body",$db->getFirebaseToken());
+        $responseG['data'] = "Demo Api Call";
         $response->write(json_encode($responseG));
         return $response->withHeader(CT,AJ)
                 ->withStatus(200);
@@ -116,7 +79,7 @@ $app->get('/demo1',function(Request $request, Response $response,array $args )
     $responseG = array();
     $responseG['success'] = true;
     $responseG[ERROR] = false;
-    $responseG['data'] = $db->getNewInvoiceNumber();
+    $responseG['data'] = "Demo Api Call Again For Testing Purpose";
     $response->write(json_encode($responseG));
     return $response->withHeader(CT,AJ)
             ->withStatus(200);
@@ -660,6 +623,40 @@ $app->get('/seller/{sellerId}',function(Request $request, Response $response, ar
                     $resp['error'] = false;
                     $resp['message'] = "Seller Found";
                     $resp['seller'] = $sellers;
+                    $response->write(json_encode($resp));
+                    return $response->withHeader(CT,AJ)
+                                    ->withStatus(200);
+                }
+                else
+                    return returnException(true,SELLER_NOT_FOUND,$response);
+            }
+            else
+                return returnException(true,SELLER_NOT_FOUND,$response);
+        }
+        else
+            return returnException(true,"Required Parameter sellerId is missing",$response);
+    }
+    else
+        return returnException(true,UNAUTH_ACCESS,$response);
+});
+
+$app->get('/seller/{sellerId}/sales/status',function(Request $request, Response $response, array $args)
+{
+    $db = new DbHandler;
+    if (validateToken($db,$request,$response) || 1==1) 
+    {
+        $sellerId = $args['sellerId'];
+        if (!empty($sellerId)) 
+        {
+            if ( $db->isSellerExist($sellerId)) 
+            {
+                $sellers = $db->getSellerSalesStatusOfEveryMonthBySellerId($sellerId);
+                if(!empty($sellers))
+                {
+                    $resp = array();
+                    $resp['error'] = false;
+                    $resp['message'] = "Seller Found";
+                    $resp['status'] = $sellers;
                     $response->write(json_encode($resp));
                     return $response->withHeader(CT,AJ)
                                     ->withStatus(200);

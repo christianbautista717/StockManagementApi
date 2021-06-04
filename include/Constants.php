@@ -8,13 +8,19 @@ define('DB_USER', 'root');          //your database name
 define('DB_PASS', '');              //your database password
 define('DB_HOST', 'localhost');     //your database host name
 
-define('WEBSITE_DOMAIN', 'http://111.111.111.111/StockManagementApi/public/');
+
+define('WEBSITE_DOMAIN', 'http://socialcodia.net/StockManagementApi/public/');
 define('WEBSITE_EMAIL', 'socialcodia@gmail.com');                    //your email address
 define('WEBSITE_EMAIL_PASSWORD', 'PASSWORD');                        //your email password
 define('WEBSITE_EMAIL_FROM', 'Social Codia');                        // your website name here
 define('SMTP_HOST', 'smtp.gmail.com');
 define('SMTP_PORT', '587');
 define('SMTP_SECURE', 'tls');
+
+
+define('FIREBASE_AUTHORIZATION_KEY', 'AAAA6WvdJgY:APA91bFzcsvFJoPfF5GzwH6VcS09pMtkPSMckRiFyoP__MoWBI1GNxFrdvCnZxRqgihhE7-ek3s6VfFoHGDA3nxCloAXFd4k-dt1Sy4u5oD-8CLNCtvaHeMnuSfJ9s3ukxvQdxhSaEG9');	// Change to your firebase key.
+
+define('FIREBASE_URL', 'https://fcm.googleapis.com/fcm/send'); 	//Don't Change It.
 
 
 define('WEBSITE_NAME', 'Stock Management');                              //your website name here
@@ -28,8 +34,6 @@ define('COMPANY_SHORT_NAME', 'STM');			// Define the company short name that the
 define('COMPANY_EMAIL', 'info@socialcodia.com');
 define('COMPANY_CONTACT_NUMBER', '+91 9867503256');
 define('COMPANY_ADDRESS', 'Nadkar Complex, Tanwar Nagar, Kausa, Mumbra');
-
-
 
 
 
@@ -54,10 +58,9 @@ define('ADMIN_POSITIONS_NAME', array('Admin','Manager','Helper'));
 
 
 
-
 /*****************************************************************************************************************************/
 
-//Azmi unani store constant starting from her
+//Stock Management System
 
 define('EMAIL_NOT_VALID', 'Invalid Email Address');
 define('PASSWORD_CHANGED', 'Password Has Been Changed');
