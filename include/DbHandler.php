@@ -782,7 +782,7 @@ class DbHandler
         date_default_timezone_set('Asia/Kolkata');
         $paymentMode = 'CASH';
         $date = date('y/m/d H:i:s', time());
-        $query = "INSERT INTO creditPayments (paymentMode,paymentDate,paymentAmount,paymentReciever,creditId,creditorId) VALUES(?,?,?,?,?,?)";
+        $query = "INSERT INTO creditpayments (paymentMode,paymentDate,paymentAmount,paymentReciever,creditId,creditorId) VALUES(?,?,?,?,?,?)";
         $stmt = $this->con->prepare($query);
         $stmt->bind_param("ssssss",$paymentMode,$date,$paymentAmount,$tokenId,$creditId,$creditorId);
         return ($stmt->execute()) ? true : false;
