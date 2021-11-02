@@ -3,7 +3,7 @@
 ///////////////////////////////////////////////////// CHANGED INFORMATION /////////////////////////////////////////////////////
 
 //Database Connection
-define('DB_NAME','stockmanagement');   //your database username
+define('DB_NAME','azmiunanistore');   //your database username
 define('DB_USER', 'root');          //your database name
 define('DB_PASS', '');              //your database password
 define('DB_HOST', 'localhost');     //your database host name
@@ -29,11 +29,13 @@ define('WEBSITE_OWNER_NAME', 'Umair Farooqui');                      //your name
 //This information will be used to genrate the invoice
 
 define('COMPANY_NAME', 'Stock Management');
+define('COMPANY_SLOGAN', 'ANDROID, WEB & SOFTWARE DEVELOPMENT');
 define('COMPANY_SHORT_NAME', 'STM');			// Define the company short name that the will print with the invoice number
-
+define('CUSTOMER_INVOICE_SHORT_NAME', 'STM');
 define('COMPANY_EMAIL', 'info@socialcodia.com');
 define('COMPANY_CONTACT_NUMBER', '+91 9867503256');
-define('COMPANY_ADDRESS', 'Nadkar Complex, Tanwar Nagar, Kausa, Mumbra');
+define('COMPANY_ADDRESS', 'Shop No 21, Ground Floor, Nadkar Complex, Tanwar Nagar, Kausa,
+Mumbra, Dist. Thane - 400612');
 
 
 

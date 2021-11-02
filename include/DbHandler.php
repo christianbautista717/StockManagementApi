@@ -11,8 +11,10 @@ class DbHandler
     private $userId;
     private $saleId;
     private $invoiceNumber;
+    private $customerInvoiceNumber;
     private $invoiceId;
     private $creditorId;
+    private $customerId;
     private $creditId;
 
     function __construct()
@@ -44,6 +46,16 @@ class DbHandler
         return $this->saleId;
     }
 
+    function getCustomerId()
+    {
+        return $this->customerId;
+    }
+
+    function setCustomerId($customerId)
+    {
+        $this->customerId = $customerId;
+    }
+
     function setInvoiceNumber($invoiceNumber)
     {
         $this->invoiceNumber = $invoiceNumber;
@@ -52,6 +64,16 @@ class DbHandler
     function getInvoiceNumber()
     {
         return $this->invoiceNumber;
+    }
+
+    function setCustomerInvoiceNumber($customerInvoiceNumber)
+    {
+        $this->customerInvoiceNumber = $customerInvoiceNumber;
+    }
+
+    function getCustomerInvoiceNumber()
+    {
+        return $this->customerInvoiceNumber;
     }
 
     function setInvoiceId($invoiceId)
@@ -106,7 +128,6 @@ class DbHandler
     }
 
     function sendGCM($title,$body, $to) {
-
 
         $url = FIREBASE_URL;
 
@@ -745,6 +766,21 @@ class DbHandler
         return ($stmt->execute()) ? true : false;
     }
 
+    function getNewCustomerInvoiceNumber()
+    {
+        $query = "SELECT invoiceNumber from customerinvoices ORDER BY invoiceId DESC LIMIT 1";
+        $stmt = $this->con->prepare($query);
+        $stmt->execute();
+        $stmt->bind_result($invoiceNumber);
+        $stmt->fetch();
+        if (empty($invoiceNumber))
+            $invoiceNumber = CUSTOMER_INVOICE_SHORT_NAME."10000";
+        $companyTag = substr($invoiceNumber,0, strlen(CUSTOMER_INVOICE_SHORT_NAME));
+        $invoiceNumber = (int) substr($invoiceNumber,strlen(CUSTOMER_INVOICE_SHORT_NAME), 10)+1;
+        $invoiceNumber = $companyTag.$invoiceNumber;
+        return $invoiceNumber;
+    }
+
     function getNewInvoiceNumber()
     {
         $query = "SELECT invoice_number from invoices ORDER BY invoice_id DESC LIMIT 1";
@@ -883,6 +919,21 @@ class DbHandler
         return $invoiceAmount-$paidAmount;
     }
 
+    function addCustomerInvoice($customerId,$invoiceNumber,$invoiceUrl)
+    {
+        date_default_timezone_set('Asia/Kolkata');
+        $date = date('y/m/d', time());
+        $query = "INSERT INTO customerinvoices (invoiceNumber,invoiceUrl,customerId,invoiceDate) VALUES(?,?,?,?)";
+        $stmt = $this->con->prepare($query);
+        $stmt->bind_param("ssss",$invoiceNumber,$invoiceUrl,$customerId,$date);
+        if ($stmt->execute())
+        {
+            return true;
+        }
+        else
+            return false;
+    }
+
     function addInvoice($sellerId)
     {
         date_default_timezone_set('Asia/Kolkata');
@@ -943,7 +994,21 @@ class DbHandler
             return PRODUCT_QUANTITY_LOW;
     }
 
-    function addCreditor($creditorName,$creditorMobile,$creditorAddress)
+    function addCustomer($customerName,$customerMobile,$customerAddress)
+    {
+        $query = "INSERT INTO customers (customerName,customerMobile,customerAddress) VALUES(?,?,?)";
+        $stmt = $this->con->prepare($query);
+        $stmt->bind_param("sss",$customerName,$customerMobile,$customerAddress);
+        if ($stmt->execute())
+        {
+            $this->setCustomerId($stmt->insert_id);
+            return true;
+        }
+        else
+            return false;
+    }
+
+    function addCreditor($customerName,$customerMobile,$customerAddress)
     {
         if (!$this->isCreditorExistByMobile($creditorMobile))
         {
@@ -2021,6 +2086,78 @@ class DbHandler
         $date->setTime(23,59);
         $endDT = $date->format('Y-m-d H:i:s');
         $query = "SELECT sell_id,product_id,sell_quantity,sell_discount,sell_price,created_at FROM sells where created_at between '$startDT' and '$endDT' ORDER By sell_id DESC";
+        $stmt = $this->con->prepare($query);
+        $stmt->execute();
+        $stmt->bind_result($sellId,$productId,$saleQuantity,$saleDiscount,$sellPrice,$createdAt);
+        while ($stmt->fetch()) 
+        {
+            $pro['sellId'] = $sellId;
+            $pro['productId'] = $productId;
+            $pro['saleQuantity'] = $saleQuantity;
+            $pro['saleDiscount'] = $saleDiscount;
+            $pro['sellPrice'] = $sellPrice;
+            $pro['createdAt'] = $createdAt;
+            array_push($products, $pro);
+        }
+        $stmt->close();
+        foreach ($products as $product)
+        {
+            $pro = $this->getProductById($product['productId']);
+            $pro['saleId'] = $product['sellId'];
+            $pro['saleQuantity'] = $product['saleQuantity'];
+            $pro['saleDiscount'] = $product['saleDiscount'];
+            $pro['salePrice'] = $product['sellPrice'];
+            $pro['createdAt'] = $product['createdAt'];
+            array_push($pr, $pro);
+        }
+        return $pr;
+    }
+
+    function getSalesRecordByDate($fromDate,$toDate)
+    {
+        $products = array();
+        $pr = array();
+        date_default_timezone_set('Asia/Kolkata');
+        $date = new DateTime($fromDate);
+        $date->setTime(00,00);
+        $fromDate = $date->format('Y-m-d H:i:s');
+        $date = new DateTime($toDate);
+        $date->setTime(23,59);
+        $toDate = $date->format('Y-m-d H:i:s');
+        $query = "SELECT sell_id,product_id,sell_quantity,sell_discount,sell_price,created_at FROM sells where created_at between '$fromDate' and '$toDate' ORDER By sell_id DESC";
+        $stmt = $this->con->prepare($query);
+        $stmt->execute();
+        $stmt->bind_result($sellId,$productId,$saleQuantity,$saleDiscount,$sellPrice,$createdAt);
+        while ($stmt->fetch()) 
+        {
+            $pro['sellId'] = $sellId;
+            $pro['productId'] = $productId;
+            $pro['saleQuantity'] = $saleQuantity;
+            $pro['saleDiscount'] = $saleDiscount;
+            $pro['sellPrice'] = $sellPrice;
+            $pro['createdAt'] = $createdAt;
+            array_push($products, $pro);
+        }
+        $stmt->close();
+        foreach ($products as $product)
+        {
+            $pro = $this->getProductById($product['productId']);
+            $pro['saleId'] = $product['sellId'];
+            $pro['saleQuantity'] = $product['saleQuantity'];
+            $pro['saleDiscount'] = $product['saleDiscount'];
+            $pro['salePrice'] = $product['sellPrice'];
+            $pro['createdAt'] = $product['createdAt'];
+            array_push($pr, $pro);
+        }
+        return $pr;
+    }
+
+    function getSalesRecordBySalesIds($sales)
+    {
+        $products = array();
+        $pr = array();
+        $saless = implode(",",$sales);
+        $query = "SELECT sell_id,product_id,sell_quantity,sell_discount,sell_price,created_at FROM sells where sell_id IN ($saless) ORDER By sell_id DESC";
         $stmt = $this->con->prepare($query);
         $stmt->execute();
         $stmt->bind_result($sellId,$productId,$saleQuantity,$saleDiscount,$sellPrice,$createdAt);
